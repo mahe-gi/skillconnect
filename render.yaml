@@ -6,10 +6,6 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app
     healthCheckPath: /
-    disk:
-      name: sqlite-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: SECRET_KEY
         generateValue: true
@@ -18,7 +14,7 @@ services:
       - key: DEMO_MODE
         value: "true"
       - key: DATABASE_URL
-        value: sqlite:////data/skillconnect_demo.db
+        value: sqlite:///skillconnect_demo.db
       - key: PAYMENT_MODE
         value: sandbox
       - key: JITSI_DOMAIN
