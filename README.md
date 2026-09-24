@@ -67,3 +67,4 @@ sender (or Resend's testing sender while developing). Never commit `.env`.
 `render.yaml` provisions the free Render web service and `.github/workflows/test.yml`
 runs the test suite on GitHub Actions. This is a server-rendered Flask application, so
 Vercel is not required unless the frontend is later separated from the backend.
+# skillconnect
