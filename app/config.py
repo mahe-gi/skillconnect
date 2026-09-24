@@ -40,6 +40,9 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
+    SESSION_COOKIE_SECURE = True        # only send cookie over HTTPS
+    SESSION_COOKIE_SAMESITE = "Lax"     # CSRF-safe for same-site navigation
+    PREFERRED_URL_SCHEME = "https"      # url_for() generates https:// links
 
 
 class TestingConfig(Config):
