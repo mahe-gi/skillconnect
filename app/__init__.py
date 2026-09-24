@@ -1,18 +1,25 @@
 from flask import Flask
 from flask_login import current_user
 
-from app.config import DevelopmentConfig
+from app.config import DevelopmentConfig, ProductionConfig
 from app.extensions import csrf, db, login_manager, migrate
 
 
 def create_app(config_object=DevelopmentConfig):
-    app = Flask(__name__)
-    app.config.from_object(config_object)
+    flask_app = Flask(__name__)
+    flask_app.config.from_object(config_object)
 
-    db.init_app(app)
-    migrate.init_app(app, db)
-    login_manager.init_app(app)
-    csrf.init_app(app)
+    db.init_app(flask_app)
+    migrate.init_app(flask_app, db)
+    login_manager.init_app(flask_app)
+    csrf.init_app(flask_app)
+
+    # In demo/SQLite mode we create the schema directly from models,
+    # bypassing the Alembic migrations which contain MySQL-specific DDL.
+    if flask_app.config.get("DEMO_MODE"):
+        with flask_app.app_context():
+            import app.models  # noqa: F401 — ensure all models are registered
+            db.create_all()
 
     from app.auth.routes import auth_bp
     from app.admin.routes import admin_bp
@@ -26,19 +33,19 @@ def create_app(config_object=DevelopmentConfig):
     from app.skills.routes import skills_bp
     from app.tutors.routes import tutors_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(main_bp)
-    app.register_blueprint(messages_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(skills_bp)
-    app.register_blueprint(tutors_bp)
-    app.register_blueprint(booking_bp)
-    app.register_blueprint(sessions_bp)
-    app.register_blueprint(notifications_bp)
-    app.register_blueprint(payments_bp)
-    app.register_blueprint(admin_bp)
+    flask_app.register_blueprint(auth_bp)
+    flask_app.register_blueprint(main_bp)
+    flask_app.register_blueprint(messages_bp)
+    flask_app.register_blueprint(dashboard_bp)
+    flask_app.register_blueprint(skills_bp)
+    flask_app.register_blueprint(tutors_bp)
+    flask_app.register_blueprint(booking_bp)
+    flask_app.register_blueprint(sessions_bp)
+    flask_app.register_blueprint(notifications_bp)
+    flask_app.register_blueprint(payments_bp)
+    flask_app.register_blueprint(admin_bp)
 
-    @app.context_processor
+    @flask_app.context_processor
     def inject_navigation_counts():
         if not current_user.is_authenticated:
             return {"unread_notification_count": 0, "unread_message_count": 0, "session_action_count": 0}
@@ -59,4 +66,4 @@ def create_app(config_object=DevelopmentConfig):
             ).count(),
         }
 
-    return app
+    return flask_app

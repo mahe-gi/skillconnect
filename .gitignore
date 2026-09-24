@@ -17,3 +17,4 @@ app/static/uploads/
 *.log
 .vscode/
 .idea/
+*.db

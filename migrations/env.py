@@ -97,6 +97,9 @@ def run_migrations_online():
     connectable = get_engine()
 
     with connectable.connect() as connection:
+        # render_as_batch is required for SQLite ALTER TABLE support.
+        # Set it in conf_args so it reaches context.configure() only once.
+        conf_args.setdefault("render_as_batch", True)
         context.configure(
             connection=connection,
             target_metadata=get_metadata(),

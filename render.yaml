@@ -6,22 +6,32 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app
     healthCheckPath: /
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: SECRET_KEY
         generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:////data/skillconnect_demo.db
       - key: PAYMENT_MODE
         value: sandbox
       - key: JITSI_DOMAIN
         value: meet.jit.si
-      - key: DATABASE_URL
-        sync: false
-      - key: RAZORPAY_KEY_ID
-        sync: false
-      - key: RAZORPAY_KEY_SECRET
-        sync: false
-      - key: RAZORPAY_WEBHOOK_SECRET
-        sync: false
+      # Optional — leave blank to skip real emails (demo just logs them)
       - key: RESEND_API_KEY
-        sync: false
+        value: ""
       - key: RESEND_FROM_EMAIL
-        sync: false
+        value: ""
+      # Optional — leave blank to use demo mock payments
+      - key: RAZORPAY_KEY_ID
+        value: ""
+      - key: RAZORPAY_KEY_SECRET
+        value: ""
+      - key: RAZORPAY_WEBHOOK_SECRET
+        value: ""

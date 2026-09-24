@@ -31,13 +31,47 @@ def checkout(session_id):
     if session.is_skill_exchange:
         flash("This session is a skill exchange and does not need payment.", "warning")
         return redirect(url_for("sessions.index"))
-    if current_app.config["PAYMENT_MODE"] != "sandbox" or not current_app.config["RAZORPAY_KEY_ID"] or not current_app.config["RAZORPAY_KEY_SECRET"]:
-        flash("Razorpay sandbox is not configured yet.", "error")
-        return redirect(url_for("sessions.index"))
+
     payment = Payment.query.filter_by(session_id=session.id).first()
     if payment and payment.status == "paid":
         return redirect(url_for("payments.receipt", payment_id=payment.id))
+
     amount = current_app.config["SESSION_PRICE_PAISE"]
+    demo_mode = current_app.config.get("DEMO_MODE") or not current_app.config["RAZORPAY_KEY_ID"]
+
+    # ------------------------------------------------------------------
+    # Demo / showcase mode: skip Razorpay entirely and instantly confirm
+    # the payment so the full post-payment flow is demonstrable without
+    # any external API keys.
+    # ------------------------------------------------------------------
+    if demo_mode:
+        receipt = f"sc-demo-{session.id}-{uuid4().hex[:8]}"
+        if not payment:
+            payment = Payment(
+                session_id=session.id,
+                payer_id=current_user.id,
+                amount_paise=amount,
+                receipt_number=receipt,
+                provider="demo",
+            )
+            db.session.add(payment)
+        payment.provider_reference = f"demo_{uuid4().hex[:12]}"
+        payment.status = "paid"
+        db.session.add(
+            Notification(
+                user_id=session.tutor_id,
+                type="payment_received",
+                message="A session payment was completed (demo mode).",
+                session_id=session.id,
+            )
+        )
+        db.session.commit()
+        flash("✅ Demo payment successful — no real money charged.", "success")
+        return redirect(url_for("payments.receipt", payment_id=payment.id))
+
+    # ------------------------------------------------------------------
+    # Live / sandbox Razorpay flow
+    # ------------------------------------------------------------------
     try:
         order = _razorpay_request("orders", {"amount": amount, "currency": "INR", "receipt": f"sc-{session.id}-{uuid4().hex[:8]}", "payment_capture": 1})
     except (HTTPError, URLError, OSError, ValueError):
