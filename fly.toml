@@ -1,0 +1,25 @@
+app = "skillconnect"          # change this if the name is taken on fly.io
+primary_region = "sin"        # Singapore — closest to India
+
+[build]
+
+[env]
+  FLASK_ENV     = "production"
+  DEMO_MODE     = "true"
+  DATABASE_URL  = "sqlite:////data/skillconnect_demo.db"
+  PAYMENT_MODE  = "sandbox"
+  JITSI_DOMAIN  = "meet.jit.si"
+
+[http_service]
+  internal_port       = 8080
+  force_https         = true
+  auto_stop_machines  = false   # keep alive — no cold starts on free tier
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"        # free tier machine size
+
+[mounts]
+  source      = "skillconnect_data"
+  destination = "/data"         # SQLite file lives here — persists across deploys
